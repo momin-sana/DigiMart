@@ -35,6 +35,7 @@ public class SigninFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_signin, container, false);
 
+        // TODO GET DATA FROM FIREBASE AND CHECK IF USER EXISTS OR NOT... follow video...
         Button btnSignin = view.findViewById(R.id.signin_btn);
         createAccTV= view.findViewById(R.id.create_account_tv);
         createAccTV.setOnClickListener(v -> showRegistration());
