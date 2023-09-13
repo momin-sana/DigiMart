@@ -2,7 +2,7 @@ Create Project
 Create *Splash Screen*
      > lottieAnimationView
      > Handler().postDelayed(() = transaction to new activity
-Create activity and Design xml for with *signup and signin fragments*
+Create activity and Design xml for with *signup and signing fragments*
     *SIGNUP FRAGMENT*
         > Initialize all necessary fields, buttons, text, and images
         > Create Validations Methods for all fields
