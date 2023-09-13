@@ -1,0 +1,72 @@
+Create Project
+Create *Splash Screen*
+     > lottieAnimationView
+     > Handler().postDelayed(() = transaction to new activity
+Create activity and Design xml for with *signup and signin fragments*
+    *SIGNUP FRAGMENT*
+        > Initialize all necessary fields, buttons, text, and images
+        > Create Validations Methods for all fields
+        > Create Method to check validations and proceed to signup function.
+            > SignupFragment.validateFields() Here validations are checked on based of which signup btn color is managed. and data is stored in firebase.
+        >Navigation to Signing page.
+ // DATE: 13 SEPTEMBER 2023
+        >Store data to firebase
+            >linking firebase to android
+                >adding dependencies for firebase auth and realtime database
+                >initializing into fragment
+            >Create method to check if user already exists or not & to store user data
+                >validateAccount(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA)
+                    >in this method I have used   // Sanitize the email to create a valid database key
+                        here OR WE CAN Also USE UID // i think this is much better to user for future data storage.
+                        FirebaseUser currentUser = mAuth.getCurrentUser();
+                        private void validateAccount(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA) {
+                            final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+
+                            FirebaseAuth mAuth = FirebaseAuth.getInstance();
+                            FirebaseUser currentUser = mAuth.getCurrentUser();
+
+                            if (currentUser != null) {
+                                String uid = currentUser.getUid();
+
+                                // Check if a user with this UID exists in the database
+                                databaseReference.child("Users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                        if (!snapshot.exists()) {
+                                            // User with this UID does not exist in the database, so you can create the user data
+                                            HashMap<String, Object> userDataMap = new HashMap<>();
+                                            userDataMap.put("username", usernameVA);
+                                            userDataMap.put("email", emailVA);
+                                            userDataMap.put("phone", phoneNumberVA);
+                                            userDataMap.put("password", cPasswordVA);
+
+                                            databaseReference.child("Users").child(uid).updateChildren(userDataMap)
+                                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                Toast.makeText(getContext(), R.string.account_successfully_created, Toast.LENGTH_SHORT).show();
+                                                                showSignIn();
+                                                            }
+                                                        }
+                                                    });
+                                        } else {
+                                            Toast.makeText(getContext(), R.string.user_with_this_email_already_exists + emailVA, Toast.LENGTH_SHORT).show();
+                                            showSignIn();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) {
+                                        // Handle database error here if needed
+                                        Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                                signupBtn.setBackgroundColor(requireActivity().getColor(R.color.dark_purple));
+                            }
+                        }
+ // DATE: 13 SEPTEMBER 2023
+
+
+    *SIGNIN FRAGMENT*
+        >

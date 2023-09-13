@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="light_purple">#D7B0D8</color>
+    <color name="bright_violet">#F06BFF</color>
+    <color name="bg_dark_violet">#45003B</color>
+    <color name="dark_dirty_violet">#5F465E</color>
+    <color name="dark_purple">#45003B</color>
+    <color name="purple_transient">#9A530059</color>
+    <color name="light_purple_transient">#50A11382</color>
+    <color name="light_gray">#9F8A9F</color>
+    <color name="orange">#FF9B66</color>
+    <color name="red">#800000</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+
+        <color name="dull_hint_color">#A0A0A0</color>
+        <color name="dull_counter_color">#A0A0A0</color>
+        <color name="dull_helper_text_color">#A0A0A0</color>
+
+
+
+</resources>

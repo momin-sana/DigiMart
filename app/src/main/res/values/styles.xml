@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<!--    <style name="HintText" parent="TextAppearance.Design.Hint">-->
+<!--        <item name="android:textSize">13sp</item>-->
+<!--        <item name="android:textColor">@color/orange</item>-->
+<!--    </style>-->
+
+<!--    <style name="CounterText" parent="TextAppearance.Design.Counter">-->
+<!--        <item name="android:textSize">14sp</item>-->
+<!--        <item name="android:textColor">@color/orange</item>-->
+<!--    </style>-->
+
+<!--    <style name="ErrorText" parent="TextAppearance.Design.Error">-->
+<!--        <item name="errorTextColor">@color/orange</item>-->
+<!--        <item name="boxStrokeErrorColor">@color/orange</item>-->
+<!--    </style>-->
+</resources>

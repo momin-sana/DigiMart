@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "47539634118",
+    "project_id": "digimart-a57a0",
+    "storage_bucket": "digimart-a57a0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:47539634118:android:6a209df59c4e2e30a33cc7",
+        "android_client_info": {
+          "package_name": "com.student.digimart"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "47539634118-5ef3e5eqs3bdpgq9a5naao554a02tujg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAObe4sfeOvQYeAUCDeRNODQBPyG_Y6InA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "47539634118-5ef3e5eqs3bdpgq9a5naao554a02tujg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

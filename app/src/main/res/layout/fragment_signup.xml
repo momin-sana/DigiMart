@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".SignupFragment"
+    android:background="@drawable/gradient_splash_bg">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/digimart_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/digi_mart_name"
+            android:src="@drawable/name_digimart_screen_top"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/createUsernameTextInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+
+            android:hint="@string/create_username_hint"
+            android:textColorHint="@color/light_purple"
+
+            app:boxStrokeErrorColor="@color/red"
+
+            app:counterEnabled="true"
+            app:counterMaxLength="15"
+            app:counterTextColor="@color/light_gray"
+
+            app:errorEnabled="true"
+            app:errorIconTint="@color/orange"
+            app:errorTextColor="@color/orange"
+
+            app:helperText="@string/e_g_abc123xyz"
+            app:helperTextEnabled="true"
+            app:helperTextTextColor="@color/light_gray"
+            app:hintEnabled="true"
+
+            app:layout_constraintBottom_toTopOf="@+id/createEmailTextInputLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintVertical_bias="0.167">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/create_username_input_signup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#6A5F465E"
+                android:inputType="text"
+                android:shadowColor="@color/black"
+                android:textColor="@color/light_purple"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/digimart_name" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/createEmailTextInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+
+            android:hint="@string/enter_email_hint_signup"
+            android:textColorHint="@color/light_purple"
+
+            app:boxStrokeErrorColor="@color/red"
+
+            app:errorEnabled="true"
+            app:errorIconTint="@color/orange"
+            app:errorTextColor="@color/orange"
+
+            app:helperText="E.g: abc@email.com"
+            app:helperTextEnabled="true"
+
+            app:helperTextTextColor="@color/light_gray"
+            app:hintEnabled="true"
+
+            app:layout_constraintBottom_toTopOf="@+id/enterPhoneNoInputLayout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/create_email_input_signup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="#6A5F465E"
+                android:inputType="textEmailAddress"
+                android:shadowColor="@color/black"
+                android:textColor="@color/light_purple"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/digimart_name" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/enterPhoneNoInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+
+            android:hint="@string/enter_phone_no_hint"
+            android:textColorHint="@color/light_purple"
+
+            app:boxStrokeErrorColor="@color/red"
+
+            app:errorEnabled="true"
+            app:errorIconTint="@color/orange"
+            app:errorTextColor="@color/orange"
+
+            app:helperText="@string/enter_phone_number_with_area_code"
+            app:helperTextEnabled="true"
+            app:helperTextTextColor="@color/light_purple"
+            app:hintEnabled="true"
+
+            app:layout_constraintBottom_toBottomOf="@+id/have_acc_tv"
+            app:layout_constraintEnd_toEndOf="@+id/createEmailTextInputLayout"
+            app:layout_constraintStart_toStartOf="@+id/createEmailTextInputLayout"
+            app:layout_constraintTop_toTopOf="@+id/digimart_name">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/enter_phone_no_input_signup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="#6A5F465E"
+                android:inputType="phone"
+                android:shadowColor="@color/black"
+                android:textColor="@color/light_purple"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/digimart_name" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/createPasswordTextInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginTop="10dp"
+
+            android:hint="@string/create_password_hint"
+            android:textColorHint="@color/light_purple"
+
+            app:boxStrokeErrorColor="@color/red"
+
+            app:errorEnabled="true"
+            app:errorIconTint="@color/orange"
+            app:errorTextColor="@color/orange"
+
+            app:helperText=""
+            app:helperTextEnabled="true"
+            app:helperTextTextColor="@color/light_purple"
+            app:hintEnabled="true"
+
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="@color/light_purple"
+
+            app:counterEnabled="true"
+            app:counterMaxLength="15"
+            app:counterTextColor="@color/light_gray"
+
+            app:layout_constraintEnd_toEndOf="@+id/enterPhoneNoInputLayout"
+            app:layout_constraintStart_toStartOf="@+id/enterPhoneNoInputLayout"
+            app:layout_constraintTop_toBottomOf="@+id/enterPhoneNoInputLayout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/create_password_input_signup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="#6A5F465E"
+                android:inputType="textPassword"
+                android:textSize="16sp"
+                android:shadowColor="@color/black"
+                android:textColor="@color/light_purple"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/digimart_name" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/confirmPasswordTextInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginTop="10dp"
+
+            android:hint="@string/confirm_password_hint"
+            android:textColorHint="@color/light_purple"
+
+            app:boxStrokeErrorColor="@color/red"
+
+            app:errorEnabled="true"
+            app:errorIconTint="@color/orange"
+            app:errorTextColor="@color/orange"
+
+            app:helperText=""
+            app:helperTextEnabled="true"
+            app:helperTextTextColor="@color/light_purple"
+            app:hintEnabled="true"
+
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="@color/light_purple"
+
+            app:layout_constraintEnd_toEndOf="@+id/createPasswordTextInputLayout"
+            app:layout_constraintStart_toStartOf="@+id/createPasswordTextInputLayout"
+            app:layout_constraintTop_toBottomOf="@+id/createPasswordTextInputLayout">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/confirm_password_input_signup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="#6A5F465E"
+                android:inputType="textPassword"
+                android:textSize="16sp"
+                android:shadowColor="@color/black"
+                android:textColor="@color/light_purple"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/digimart_name" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/signup_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:text="@string/signup"
+            android:layout_marginTop="10dp"
+            android:textSize="16sp"
+            app:backgroundTint="@color/dark_dirty_violet"
+            app:layout_constraintBottom_toTopOf="@+id/have_acc_tv"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/have_acc_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:padding="10dp"
+            android:text="@string/have_account"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/light_purple"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+</FrameLayout>

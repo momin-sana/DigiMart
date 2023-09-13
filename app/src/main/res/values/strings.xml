@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">DigiMart</string>
+    <string name="digi_mart_name">Digi Mart</string>
+    <string name="enter_email_user">Sign-in with  Email</string>
+    <string name="enter_password_hint">Please Enter Your Password</string>
+    <string name="create_account">Create an account</string>
+    <string name="invalid_input">Invalid Input</string>
+    <string name="invalid_password">Invalid Password</string>
+    <string name="invalid_username">Invalid UserName</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="signin">SignIn</string>
+    <string name="signup">SignUp</string>
+    <string name="enter_email_hint_signup">Please Enter Email Address</string>
+    <string name="create_password_hint">Create a Password</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="enter_phone_no_hint">Enter Your Phone Number</string>
+    <string name="create_username_hint">Create Username</string>
+    <string name="have_account">Already Have an Account? SignIn</string>
+
+    <string name="username_incorrect">Username must not contain any space, must have letters and numbers</string>
+
+
+    <string name="error_msg_invalid_email">Email pattern not accurate</string>
+    <string name="error_msg_invalid_username">Username must have letters and numbers only, 10–15 characters</string>
+    <string name="error_msg_invalid_password_created">Password must contain 8 letters; at least 1 capital letter, 1 special character, and 1 number</string>
+    <string name="error_msg_invalid_password_matching">Password not matched</string>
+    <string name="error_msg_invalid_phoneNo">Invalid phone number. Format: +92XXXXXXXXXX</string>
+    <string name="enter_phone_number_with_area_code">Enter Phone Number with Area Code</string>
+    <string name="e_g_abc123xyz">E.g: abc123xyz</string>
+    <string name="required_field">Required Field</string>
+    <string name="user_with_this_email_already_exists">User with this email already exists \n</string>
+    <string name="database_error_or_network_error">Database error OR Network error</string>
+    <string name="account_successfully_created">Congratulation, account has been successfully created!</string>
+
+
+</resources>
