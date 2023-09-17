@@ -1,8 +1,14 @@
 package com.student.digimart;
 
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -11,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 
@@ -26,6 +33,36 @@ public class SigninFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                ImageView cancel, icon;
+                View alertCustomDialog = LayoutInflater.from(requireActivity()).inflate(R.layout.dialogbox_userexists, null);
+                Drawable drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.warning);
+                icon = alertCustomDialog.findViewById(R.id.dialog_icon);
+                icon.setImageDrawable(drawable);
+                Button okBtn = alertCustomDialog.findViewById(R.id.sign_in_btn);
+                okBtn.setText(R.string.yes);
+                TextView alertTV = alertCustomDialog.findViewById(R.id.alert_textview);
+                alertTV.setText(R.string.sure_to_exit);
+                cancel = alertCustomDialog.findViewById(R.id.cancel_button);
+
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                builder.setView(alertCustomDialog);
+                AlertDialog dialog = builder.create();
+                if (dialog.getWindow() != null) {
+                    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                }
+                dialog.show();
+
+                okBtn.setOnClickListener(v -> {
+                    dialog.dismiss();
+                    requireActivity().finishAffinity();
+                });
+                cancel.setOnClickListener(v -> dialog.dismiss());
+            }
+        });
 
     }
 
@@ -58,4 +95,6 @@ public class SigninFragment extends Fragment {
 
 
     }
+
+
 }

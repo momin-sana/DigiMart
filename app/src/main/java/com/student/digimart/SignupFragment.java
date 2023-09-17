@@ -1,13 +1,14 @@
 package com.student.digimart;
-
-import android.app.ProgressDialog;
-import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -15,12 +16,12 @@ import android.os.Handler;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +35,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
@@ -269,12 +269,7 @@ public class SignupFragment extends Fragment {
 
             // change the color
             signupBtn.setBackgroundColor(requireActivity().getColor(R.color.orange));
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    signupBtn.setBackgroundColor(requireActivity().getColor(R.color.dark_dirty_violet));
-                }
-            }, 1000);
+            new Handler().postDelayed(() -> signupBtn.setBackgroundColor(requireActivity().getColor(R.color.dark_dirty_violet)), 1000);
         }
 
     }
@@ -298,18 +293,15 @@ public class SignupFragment extends Fragment {
                     userDataMap.put("password", cPasswordVA);
 
                     databaseReference.child("Users").child(sanitizedEmail).updateChildren(userDataMap)
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()){
-                                        Toast.makeText(getContext(), R.string.account_successfully_created , Toast.LENGTH_SHORT).show();
-                                        showSignIn();
-                                    }
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()){
+                                    Toast.makeText(getContext(), R.string.account_successfully_created , Toast.LENGTH_SHORT).show();
+                                    showSignIn();
                                 }
                             });
                 }else {
-                    Toast.makeText(getContext(), R.string.user_with_this_email_already_exists + emailVA , Toast.LENGTH_SHORT).show();
-                    showSignIn();
+                   userAlreadyExistsDialog();
+
                 }
             }
 
@@ -337,4 +329,37 @@ public class SignupFragment extends Fragment {
 
     }
 
+    private void userAlreadyExistsDialog() {
+        ImageView cancel, icon;
+        View alertCustomDialog = LayoutInflater.from(requireActivity()).inflate(R.layout.dialogbox_userexists, null);
+        Drawable drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.account_alert2);
+        Button siginBtn = alertCustomDialog.findViewById(R.id.sign_in_btn);
+        siginBtn.setText(R.string.signin);
+        icon = alertCustomDialog.findViewById(R.id.dialog_icon);
+        icon.setImageDrawable(drawable);
+        TextView alertTV = alertCustomDialog.findViewById(R.id.alert_textview);
+        alertTV.setText(R.string.user_with_this_email_already_exists);
+        cancel = alertCustomDialog.findViewById(R.id.cancel_button);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+        builder.setView(alertCustomDialog);
+        final AlertDialog alertDialog = builder.create();
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        alertDialog.show();
+        cancel.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            createUsername.setText("");
+            email.setText("");
+            phoneNo.setText("");
+            createPassword.setText("");
+            confirmPassword.setText("");
+        });
+
+        siginBtn.setOnClickListener(v -> {
+            showSignIn();
+            alertDialog.dismiss();
+        });
+    }
 }
