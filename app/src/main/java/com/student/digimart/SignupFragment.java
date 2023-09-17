@@ -31,6 +31,7 @@ import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -45,7 +46,7 @@ public class SignupFragment extends Fragment {
     private Button signupBtn;
     private TextInputEditText createUsername, email, createPassword, confirmPassword, phoneNo;
     private TextInputLayout emailTextInputLayout, usernameTextInputLayout, passwordTextInputLayout, confirmPasswordTextInputLayout, phoneNoInputLayout;
-    private FirebaseDatabase firebaseDatabase;
+
 
     public SignupFragment() {
         // Required empty public constructor
@@ -62,8 +63,6 @@ public class SignupFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_signup, container, false);
-
-        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
 
         haveAcc = view.findViewById(R.id.have_acc_tv);
         haveAcc.setOnClickListener(v -> showSignIn());
@@ -276,41 +275,61 @@ public class SignupFragment extends Fragment {
 
     private void validateAccount(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA) {
 //        Check if user exists or not
-
-        // Sanitize the email to create a valid database key  // OR WE CAN USE UID     FirebaseUser currentUser = mAuth.getCurrentUser();
+        // Sanitize the email to create a valid database key
         String sanitizedEmail = emailVA.replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
 
         final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot)
-            {
-                if (!(snapshot.child("Users").child(sanitizedEmail).exists())){
-                    HashMap<String, Object> userDataMap = new HashMap<>();
-                    userDataMap.put("username", usernameVA);
-                    userDataMap.put("email", emailVA);
-                    userDataMap.put("phone", phoneNumberVA);
-                    userDataMap.put("password", cPasswordVA);
+        // Check if the username exists
+        databaseReference.child("Users").orderByChild("username").equalTo(usernameVA)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot usernameSnapshot) {
+                        if (usernameSnapshot.exists()) {
+                            // Username is already in use
+                            Toast.makeText(getContext(), R.string.username_already_used, Toast.LENGTH_SHORT).show();
+                            usernameTextInputLayout.setError(getString(R.string.username_already_used));
+                        } else {
+                            // Username is not in use, check email
+                            databaseReference.child("Users").child(sanitizedEmail).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot emailSnapshot) {
+                                    if (emailSnapshot.exists()) {
+                                        // Email is already in use
+                                        userAlreadyExistsDialog();
+                                    } else {
+                                        // Neither username nor email is in use, proceed with account creation
+                                        HashMap<String, Object> userDataMap = new HashMap<>();
+                                        userDataMap.put("username", usernameVA);
+                                        userDataMap.put("email", emailVA);
+                                        userDataMap.put("phone", phoneNumberVA);
+                                        userDataMap.put("password", cPasswordVA);
 
-                    databaseReference.child("Users").child(sanitizedEmail).updateChildren(userDataMap)
-                            .addOnCompleteListener(task -> {
-                                if (task.isSuccessful()){
-                                    Toast.makeText(getContext(), R.string.account_successfully_created , Toast.LENGTH_SHORT).show();
-                                    showSignIn();
+                                        databaseReference.child("Users").child(sanitizedEmail).updateChildren(userDataMap)
+                                                .addOnCompleteListener(task -> {
+                                                    if (task.isSuccessful()) {
+                                                        Toast.makeText(getContext(), R.string.account_successfully_created, Toast.LENGTH_SHORT).show();
+                                                        showSignIn();
+                                                    }
+                                                });
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError emailError) {
+                                    // Handle database error here if needed
+                                    Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
                                 }
                             });
-                }else {
-                   userAlreadyExistsDialog();
+                        }
+                    }
 
-                }
-            }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError usernameError) {
+                        // Handle database error here if needed
+                        Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
+                    }
+                });
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle database error here if needed
-                Toast.makeText(getContext(), R.string.database_error_or_network_error , Toast.LENGTH_SHORT).show();
-            }
-        });
         signupBtn.setBackgroundColor(requireActivity().getColor(R.color.dark_purple));
 
     }

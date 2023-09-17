@@ -28,7 +28,7 @@
     <string name="enter_phone_number_with_area_code">Enter Phone Number with Area Code</string>
     <string name="e_g_abc123xyz">E.g: abc123xyz</string>
     <string name="required_field">Required Field</string>
-    <string name="user_with_this_email_already_exists">User with this details already exists \n Please Sign-In Or use new user details</string>
+    <string name="user_with_this_email_already_exists">User with this email or username already exists \n Please Sign-In Or use new user details</string>
     <string name="database_error_or_network_error">Database error OR Network error</string>
     <string name="account_successfully_created">Congratulation, account has been successfully created!</string>
     <string name="user_already_exists">User Already Exists</string>
@@ -37,6 +37,7 @@
 
     <string name="yes">Yes</string>
     <string name="sure_to_exit">Are you sure to exit?</string>
+    <string name="username_already_used">Username Already Used</string>
 
 
 </resources>

@@ -18,7 +18,7 @@ Create activity and Design xml for with *signup and signing fragments*
                 >validateAccount(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA)
                     >in this method I have used   // Sanitize the email to create a valid database key
                         here OR WE CAN Also USE UID // i think this is much better to user for future data storage.
-                        FirebaseUser currentUser = mAuth.getCurrentUser();
+                    f    FirebaseUser currentUser = mAuth.getCurrentUser();
                         private void validateAccount(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA) {
                             final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
 
