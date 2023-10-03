@@ -22,7 +22,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/enterEmailTextInputLayout"
+            android:id="@+id/enterEmailTextInputLayoutSignin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="5dp"
@@ -42,17 +42,14 @@
             app:helperTextTextColor="@color/light_gray"
             app:hintEnabled="true"
 
-            app:layout_constraintBottom_toTopOf="@+id/enterPhoneNoInputLayout"
-            app:layout_constraintEnd_toEndOf="@+id/enterPhoneNoInputLayout"
-            app:layout_constraintStart_toStartOf="@+id/enterPhoneNoInputLayout"
-            app:layout_constraintTop_toBottomOf="@+id/digimart_name">
+            app:layout_constraintBottom_toTopOf="@+id/enterPasswordInputLayoutSignin"
+            app:layout_constraintEnd_toEndOf="@+id/enterPasswordInputLayoutSignin"
+            app:layout_constraintStart_toStartOf="@+id/enterPasswordInputLayoutSignin">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/enter_email_user_signin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:padding="20dp"
                 android:background="#6A5F465E"
                 android:inputType="textEmailAddress"
                 android:shadowColor="@color/black"
@@ -64,27 +61,27 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/enterPhoneNoInputLayout"
+            android:id="@+id/enterPasswordInputLayoutSignin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="5dp"
 
-            app:hintEnabled="true"
             android:hint="@string/enter_password_hint"
             android:textColorHint="@color/light_purple"
-
             app:boxStrokeErrorColor="@color/red"
-            app:passwordToggleEnabled="true"
-            app:passwordToggleTint="@color/light_purple"
+
             app:errorEnabled="true"
             app:errorIconTint="@color/orange"
             app:errorTextColor="@color/orange"
             app:helperText=""
-
             app:helperTextEnabled="true"
             app:helperTextTextColor="@color/light_purple"
+            app:hintEnabled="true"
+
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/digimart_name">
+            app:layout_constraintTop_toTopOf="@+id/digimart_name"
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="@color/light_purple">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/enter_password_input_signin"
@@ -93,9 +90,9 @@
                 android:layout_marginTop="10dp"
                 android:background="#6A5F465E"
                 android:inputType="textPassword"
+                android:padding="20dp"
                 android:shadowColor="@color/black"
                 android:textColor="@color/light_purple"
-                android:padding="20dp"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/digimart_name" />
@@ -113,14 +110,14 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/enterPhoneNoInputLayout" />
+            app:layout_constraintTop_toBottomOf="@+id/enterPasswordInputLayoutSignin" />
 
         <TextView
             android:id="@+id/create_account_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="10dp"
             android:layout_marginTop="10dp"
+            android:padding="10dp"
             android:text="@string/create_account"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/light_purple"
@@ -129,6 +126,29 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/signin_btn" />
 
+        <CheckBox
+            android:id="@+id/checkBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/remember_me"
+            android:textColor="@color/light_purple"
+            app:layout_constraintStart_toStartOf="@+id/enterPasswordInputLayoutSignin"
+            app:layout_constraintTop_toBottomOf="@+id/enterPasswordInputLayoutSignin" />
+
+        <TextView
+            android:id="@+id/forgot_password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:padding="10dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/forgot_password"
+            android:textColor="@color/light_purple"
+            android:textColorLink="@color/orange"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/enterPasswordInputLayoutSignin"
+            android:focusable="true" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

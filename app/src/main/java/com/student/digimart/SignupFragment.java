@@ -241,6 +241,7 @@ public class SignupFragment extends Fragment {
                     if (isValidPhoneNumber(phoneNoInput)){
                         if (isValidPassword(passwordInput)){
                             if (confirmInput.equals(passwordInput)){
+//                                TODO loading bar
 //                                when all input validation are correct, check if user already exist or not. if not exist create new account.
                                 validateAccount(usernameInput, emailInput, phoneNoInput, confirmInput);
                             }else{
@@ -286,6 +287,7 @@ public class SignupFragment extends Fragment {
                     public void onDataChange(@NonNull DataSnapshot usernameSnapshot) {
                         if (usernameSnapshot.exists()) {
                             // Username is already in use
+                            userAlreadyExistsDialog();
                             Toast.makeText(getContext(), R.string.username_already_used, Toast.LENGTH_SHORT).show();
                             usernameTextInputLayout.setError(getString(R.string.username_already_used));
                         } else {

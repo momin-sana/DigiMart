@@ -28,45 +28,33 @@ Create activity and Design xml for with *signup and signing fragments*
                             if (currentUser != null) {
                                 String uid = currentUser.getUid();
 
-                                // Check if a user with this UID exists in the database
-                                databaseReference.child("Users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                        if (!snapshot.exists()) {
-                                            // User with this UID does not exist in the database, so you can create the user data
-                                            HashMap<String, Object> userDataMap = new HashMap<>();
-                                            userDataMap.put("username", usernameVA);
-                                            userDataMap.put("email", emailVA);
-                                            userDataMap.put("phone", phoneNumberVA);
-                                            userDataMap.put("password", cPasswordVA);
+                                // Check if a user with this UID exists in the database, have also added username here, to cross check email and username under same uid
+                                Code in SignupFragment.java >  databaseReference.child("Users").orderByChild("username").equalTo(usernameVA)....
 
-                                            databaseReference.child("Users").child(uid).updateChildren(userDataMap)
-                                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<Void> task) {
-                                                            if (task.isSuccessful()) {
-                                                                Toast.makeText(getContext(), R.string.account_successfully_created, Toast.LENGTH_SHORT).show();
-                                                                showSignIn();
-                                                            }
-                                                        }
-                                                    });
-                                        } else {
-                                            Toast.makeText(getContext(), R.string.user_with_this_email_already_exists + emailVA, Toast.LENGTH_SHORT).show();
-                                            showSignIn();
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError error) {
-                                        // Handle database error here if needed
-                                        Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                                signupBtn.setBackgroundColor(requireActivity().getColor(R.color.dark_purple));
                             }
                         }
+<<<<<<<<<<<<<<<<<<<<<<< HERE SIGNUP IS FINISHED <<<<<<<<<<<<<<<<<<<<<<<
  // DATE: 13 SEPTEMBER 2023
 
+Create Custom Dialog box, > used in Multi purpose > dialogbox_userexists.xml
 
     *SIGNIN FRAGMENT*
-        >
+        > handleOnBackPressed()
+        > Apply screen shaking animation
+        > Fields Validations
+            > Check user exists or not, from USER CLASS we will get the data
+        > Account Validaton
+        > Forgot password
+        > Remember me > if marked checked and already login, next time dont ask to login
+        > signIn btn > navigate to home page
+
+
+    *CREATED MODELS PACKAGE:
+     WITH USER CLASS RETRIEVE USER AND ITS DETAILS*
+        > to retrieve user data
+
+
+     *CREATED PREVALENT PACKAGE:
+     WITH PREVALENT CLASS*
+        > to get current user
+        > will be used as forgot password and remember me
