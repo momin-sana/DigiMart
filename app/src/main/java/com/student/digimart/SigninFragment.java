@@ -154,7 +154,7 @@ public class SigninFragment extends Fragment {
         return view;
     }
 
-//    abi yeha bas yeh check kiya hai k fields empty nai tou loginsucess() warna error
+
     private void validSignIn() { //check inputs matches data, if yes login, if no show error
 
         String emailInput = Objects.requireNonNull(email.getText()).toString().trim();
