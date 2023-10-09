@@ -39,6 +39,10 @@
     <string name="sure_to_exit">Are you sure to exit?</string>
     <string name="username_already_used">Username Already Used</string>
     <string name="remember_me">Remember Me</string>
+    <string name="cart_loading_animation">Cart loading animation</string>
+    <string name="please_wait_data_is_being_loaded">Please wait data is being loaded</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="signup_with_google">Signup with Google</string>
 
 
 </resources>

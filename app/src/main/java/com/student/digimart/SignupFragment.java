@@ -25,13 +25,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -46,7 +41,7 @@ public class SignupFragment extends Fragment {
     private Button signupBtn;
     private TextInputEditText createUsername, email, createPassword, confirmPassword, phoneNo;
     private TextInputLayout emailTextInputLayout, usernameTextInputLayout, passwordTextInputLayout, confirmPasswordTextInputLayout, phoneNoInputLayout;
-
+    AlertDialog alertDialog;
 
     public SignupFragment() {
         // Required empty public constructor
@@ -207,9 +202,7 @@ public class SignupFragment extends Fragment {
 
 
         signupBtn = view.findViewById(R.id.signup_btn);
-        signupBtn.setOnClickListener(v -> {
-          validateFields();
-        });
+        signupBtn.setOnClickListener(v -> validateFields());
 
         return view;
     }
@@ -228,11 +221,11 @@ public class SignupFragment extends Fragment {
     }
 
     private void validateFields() {
-        String usernameInput = createUsername.getText().toString().trim();
-        String emailInput = email.getText().toString().trim();
-        String phoneNoInput = phoneNo.getText().toString().trim();
-        String passwordInput = createPassword.getText().toString().trim();
-        String confirmInput = confirmPassword.getText().toString().trim();
+        String emailInput = (email.getText() != null) ? email.getText().toString().trim() : "";
+        String usernameInput = (createUsername.getText() != null) ? createUsername.getText().toString().trim() : "";
+        String phoneNoInput = (phoneNo.getText() != null) ? phoneNo.getText().toString().trim() : "";
+        String passwordInput = (createPassword.getText() != null) ? createPassword.getText().toString().trim() : "";
+        String confirmInput = (confirmPassword.getText() != null) ? confirmPassword.getText().toString().trim() : "";
 
 
         if (!TextUtils.isEmpty(usernameInput) || !TextUtils.isEmpty(emailInput) || !TextUtils.isEmpty(phoneNoInput) || !TextUtils.isEmpty(passwordInput) || !TextUtils.isEmpty(confirmInput)){
@@ -241,7 +234,6 @@ public class SignupFragment extends Fragment {
                     if (isValidPhoneNumber(phoneNoInput)){
                         if (isValidPassword(passwordInput)){
                             if (confirmInput.equals(passwordInput)){
-//                                TODO loading bar
 //                                when all input validation are correct, check if user already exist or not. if not exist create new account.
                                 validateAccount(usernameInput, emailInput, phoneNoInput, confirmInput);
                             }else{
@@ -275,8 +267,7 @@ public class SignupFragment extends Fragment {
     }
 
     private void validateAccount(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA) {
-//        Check if user exists or not
-        // Sanitize the email to create a valid database key
+        loadingDialog();
         String sanitizedEmail = emailVA.replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
 
         final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -286,7 +277,7 @@ public class SignupFragment extends Fragment {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot usernameSnapshot) {
                         if (usernameSnapshot.exists()) {
-                            // Username is already in use
+                            dismissLoadingDialog();
                             userAlreadyExistsDialog();
                             Toast.makeText(getContext(), R.string.username_already_used, Toast.LENGTH_SHORT).show();
                             usernameTextInputLayout.setError(getString(R.string.username_already_used));
@@ -295,8 +286,8 @@ public class SignupFragment extends Fragment {
                             databaseReference.child("Users").child(sanitizedEmail).addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot emailSnapshot) {
+                                   dismissLoadingDialog();
                                     if (emailSnapshot.exists()) {
-                                        // Email is already in use
                                         userAlreadyExistsDialog();
                                     } else {
                                         // Neither username nor email is in use, proceed with account creation
@@ -308,6 +299,7 @@ public class SignupFragment extends Fragment {
 
                                         databaseReference.child("Users").child(sanitizedEmail).updateChildren(userDataMap)
                                                 .addOnCompleteListener(task -> {
+                                                    dismissLoadingDialog();
                                                     if (task.isSuccessful()) {
                                                         Toast.makeText(getContext(), R.string.account_successfully_created, Toast.LENGTH_SHORT).show();
                                                         showSignIn();
@@ -318,6 +310,7 @@ public class SignupFragment extends Fragment {
 
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError emailError) {
+                                    dismissLoadingDialog();
                                     // Handle database error here if needed
                                     Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
                                 }
@@ -327,6 +320,7 @@ public class SignupFragment extends Fragment {
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError usernameError) {
+                        dismissLoadingDialog();
                         // Handle database error here if needed
                         Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
                     }
@@ -353,7 +347,7 @@ public class SignupFragment extends Fragment {
     private void userAlreadyExistsDialog() {
         ImageView cancel, icon;
         View alertCustomDialog = LayoutInflater.from(requireActivity()).inflate(R.layout.dialogbox_userexists, null);
-        Drawable drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.account_alert2);
+        Drawable drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.account_alert);
         Button siginBtn = alertCustomDialog.findViewById(R.id.sign_in_btn);
         siginBtn.setText(R.string.signin);
         icon = alertCustomDialog.findViewById(R.id.dialog_icon);
@@ -369,6 +363,7 @@ public class SignupFragment extends Fragment {
             alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
         alertDialog.show();
+        dismissLoadingDialog();
         cancel.setOnClickListener(v -> {
             alertDialog.dismiss();
             createUsername.setText("");
@@ -382,5 +377,16 @@ public class SignupFragment extends Fragment {
             showSignIn();
             alertDialog.dismiss();
         });
+    }
+
+    private void loadingDialog() {
+        LoadingDialogFragment loadingDialogFragment = new LoadingDialogFragment();
+        loadingDialogFragment.show(getChildFragmentManager(), "loading_dialog");
+    }
+    private void dismissLoadingDialog() {
+        LoadingDialogFragment loadingDialog = (LoadingDialogFragment) getChildFragmentManager().findFragmentByTag("loading_dialog");
+        if (loadingDialog != null && loadingDialog.getDialog() != null && loadingDialog.getDialog().isShowing()) {
+            loadingDialog.dismiss();
+        }
     }
 }

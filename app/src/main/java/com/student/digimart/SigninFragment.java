@@ -2,7 +2,6 @@ package com.student.digimart;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
@@ -10,8 +9,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -33,6 +35,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.database.DataSnapshot;
@@ -41,20 +47,24 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.student.digimart.Models.Users;
+import com.student.digimart.Prevalent.Prevalent;
 
-import java.util.List;
 import java.util.Objects;
 
 
 public class SigninFragment extends Fragment {
 
-    TextView createAccTV, forgotPassword;
+    TextView createAccTV, forgotPassword, googleSignin;
     Button btnSignIn;
     private TextInputEditText email;
     private TextInputEditText password ;
     private TextInputLayout emailTIL, passwordTIL;
     CheckBox rememberMe;
-    private String userDb = "Users";
+    private final String userDb = "Users";
+    private GoogleSignInClient googleSignInClient;
+    private GoogleAuthHandler googleAuthHandler;
+
+
 
 
     public SigninFragment() {
@@ -94,15 +104,15 @@ public class SigninFragment extends Fragment {
                 cancel.setOnClickListener(v -> dialog.dismiss());
             }
         });
-
+        googleAuthHandler = new GoogleAuthHandler();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_signin, container, false);
 
+        googleSignin = view.findViewById(R.id.sign_in_with_google_signin);
         btnSignIn = view.findViewById(R.id.signin_btn);
         createAccTV= view.findViewById(R.id.create_account_tv);
         email = view.findViewById(R.id.enter_email_user_signin);
@@ -146,11 +156,28 @@ public class SigninFragment extends Fragment {
         });
 
 
+        // Initialize sign in options the client-id is copied form google-services.json file
+        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("47539634118-5ef3e5eqs3bdpgq9a5naao554a02tujg.apps.googleusercontent.com")
+                .requestEmail()
+                .build();
+        Log.d("googleSignInOptions", "googleSignInOptions: " + googleSignInOptions);
+
+        // Initialize sign in client
+        googleSignInClient = GoogleSignIn.getClient(requireActivity(), googleSignInOptions);
+        Log.d("googleSignInClient", "googleSignInClient: " + googleSignin);
+
+        googleSignin.setOnClickListener(v -> {
+            Log.d("SignIn with Google", "SignIn with Google BTN clicked ");
+            Intent googleSignInApiSignInIntent = googleSignInClient.getSignInIntent();
+            intentActivityResultLauncher.launch(googleSignInApiSignInIntent);
+
+            Log.d("SignIn with Google", "SignIn with Google intent: " + googleSignInApiSignInIntent);
+        });
+
         createAccTV.setOnClickListener(v -> showRegistration());
 
-        btnSignIn.setOnClickListener(v -> {
-           validSignIn();
-        });
+        btnSignIn.setOnClickListener(v -> validSignIn());
         return view;
     }
 
@@ -163,6 +190,10 @@ public class SigninFragment extends Fragment {
         if (TextUtils.isEmpty(emailInput)) {
             errorAnimationShake();
             emailTIL.setError(getString(R.string.required_field));
+        } if (!Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()) {
+            errorAnimationShake();
+            emailTIL.setError(getString(R.string.error_msg_invalid_email));
+            return;
         }if (TextUtils.isEmpty(passwordInput)){
             errorAnimationShake();
             passwordTIL.setError(getString(R.string.required_field));
@@ -171,29 +202,30 @@ public class SigninFragment extends Fragment {
         }
     }
 
-    private void checkDataBase(String email, String password) {
-
+    private void checkDataBase(@NonNull String email, String password) {
         String sanitizedEmail = email.replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
-
+        loadingDialog();
         final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                dismissLoadingDialog();
                 if (snapshot.child(userDb).child(sanitizedEmail).exists()){
-//                    TODO add progress bar with a message
-
                     Users usersData = snapshot.child(userDb).child(sanitizedEmail).getValue(Users.class);
                     assert usersData != null;
                     if (usersData.getEmail().equals(email)){
                         if (usersData.getPassword().equals(password)){
+                            dismissLoadingDialog();
                             Intent intent = new Intent(getActivity(), Home.class);
                             startActivity(intent);
                             }else {
+                            dismissLoadingDialog();
                             errorAnimationShake();
                             passwordTIL.setError(getString(R.string.error_msg_invalid_password_matching));
                         }
                     }
-                }else{
+                } else{
+                    dismissLoadingDialog();
                     errorAnimationShake();
                     userDoesntExistsDialog();
                 }
@@ -201,7 +233,9 @@ public class SigninFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                dismissLoadingDialog();
+                // Handle database error here if needed
+                Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -224,7 +258,7 @@ public class SigninFragment extends Fragment {
         String emailText = Objects.requireNonNull(email.getText()).toString().trim();
         ImageView cancel, icon;
         View alertCustomDialog = LayoutInflater.from(requireActivity()).inflate(R.layout.dialogbox_userexists, null);
-        Drawable drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.account_alert2);
+        Drawable drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.account_alert);
         Button siginBtn = alertCustomDialog.findViewById(R.id.sign_in_btn);
         siginBtn.setText(R.string.signup);
         icon = alertCustomDialog.findViewById(R.id.dialog_icon);
@@ -240,21 +274,27 @@ public class SigninFragment extends Fragment {
             alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
         alertDialog.show();
+        dismissLoadingDialog();
+
         cancel.setOnClickListener(v -> {
+//            dismissLoadingDialog();
             alertDialog.dismiss();
             email.setText("");
             password.setText("");
             emailTIL.setError("");
             passwordTIL.setError("");
+
         });
 
         siginBtn.setOnClickListener(v -> {
+//            dismissLoadingDialog();
+            alertDialog.dismiss();
             email.setText("");
             password.setText("");
             emailTIL.setError("");
             passwordTIL.setError("");
             showRegistration();
-            alertDialog.dismiss();
+
         });
     }
 
@@ -266,4 +306,41 @@ public class SigninFragment extends Fragment {
             getView().startAnimation(shakeAnimation);
         }
     }
+    private void loadingDialog() {
+        LoadingDialogFragment loadingDialogFragment = new LoadingDialogFragment();
+        loadingDialogFragment.show(getChildFragmentManager(), "loading_dialog");
+    }
+    private void dismissLoadingDialog() {
+        LoadingDialogFragment loadingDialog = (LoadingDialogFragment) getChildFragmentManager().findFragmentByTag("loading_dialog");
+        if (loadingDialog != null && loadingDialog.getDialog() != null && loadingDialog.getDialog().isShowing()) {
+            loadingDialog.dismiss();
+        }
+    }
+
+    private final ActivityResultLauncher<Intent> intentActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == AppCompatActivity.RESULT_OK){
+                    Intent data = result.getData();
+                    Log.d("ActivityResultLauncher", "result.getResultCode(): " + result.getResultCode() + " \n data :" + data);
+                    googleAuthHandler.signInWithGoogle(requireActivity(), data, new GoogleAuthHandler.OnGoogleSignInResultListener() {
+                        @Override
+                        public void onGoogleSignInSuccess(Users user) {
+                            // Handle successful Google Sign-In
+                            Prevalent.setCurrentOnlineUser(user);
+                            Intent intent = new Intent(getActivity(), Home.class);
+                            startActivity(intent);
+                            // Proceed with further actions like navigating to the next screen
+                        }
+
+                        @Override
+                        public void onGoogleSignInFailure(Exception e) {
+                            // Handle Google Sign-In failure
+                            Log.d("TAG", "Google Sign-In failed: " + e.getMessage());
+                            Toast.makeText(getActivity(), "Error signing in with Google", Toast.LENGTH_SHORT).show();
+                            dismissLoadingDialog();
+                        }
+                    });
+                }
+    });
+
 }

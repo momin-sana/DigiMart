@@ -15,6 +15,7 @@ Create activity and Design xml for with *signup and signing fragments*
                 >adding dependencies for firebase auth and realtime database
                 >initializing into fragment
             >Create method to check if user already exists or not & to store user data
+               > add loading bar with dialogbox
                 >validateAccount(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA)
                     >in this method I have used   // Sanitize the email to create a valid database key
                         here OR WE CAN Also USE UID // i think this is much better to user for future data storage.
@@ -37,6 +38,7 @@ Create activity and Design xml for with *signup and signing fragments*
  // DATE: 13 SEPTEMBER 2023
 
 Create Custom Dialog box, > used in Multi purpose > dialogbox_userexists.xml
+Create LoadingDialog Fragment
 
     *SIGNIN FRAGMENT*
         > handleOnBackPressed()
