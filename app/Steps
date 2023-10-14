@@ -3,6 +3,7 @@ Create *Splash Screen*
      > lottieAnimationView
      > Handler().postDelayed(() = transaction to new activity
 Create activity and Design xml for with *signup and signing fragments*
+
     *SIGNUP FRAGMENT*
         > Initialize all necessary fields, buttons, text, and images
         > Create Validations Methods for all fields
@@ -46,6 +47,7 @@ Create LoadingDialog Fragment
         > Fields Validations
             > Check user exists or not, from USER CLASS we will get the data
         > Account Validaton
+        > Google Auth
         > Forgot password
         > Remember me > if marked checked and already login, next time dont ask to login
         > signIn btn > navigate to home page

@@ -1,21 +1,27 @@
 package com.student.digimart;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.WindowDecorActionBar;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Handler;
 import android.text.Editable;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.ClickableSpan;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,8 +31,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -34,9 +44,21 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SignupFragment extends Fragment {
+
+    //         Set of recognized email domains
+    private static final HashSet<String> AUTHENTIC_EMAIL_DOMAINS = new HashSet<>();
+    static {
+        AUTHENTIC_EMAIL_DOMAINS.add("gmail.com");
+        AUTHENTIC_EMAIL_DOMAINS.add("yahoo.com");
+        AUTHENTIC_EMAIL_DOMAINS.add("hotmail.com");
+        // Add more authentic domains as needed
+    }
     private TextView haveAcc;
     private Button signupBtn;
     private TextInputEditText createUsername, email, createPassword, confirmPassword, phoneNo;
@@ -200,7 +222,6 @@ public class SignupFragment extends Fragment {
             }
         });
 
-
         signupBtn = view.findViewById(R.id.signup_btn);
         signupBtn.setOnClickListener(v -> validateFields());
 
@@ -231,26 +252,25 @@ public class SignupFragment extends Fragment {
         if (!TextUtils.isEmpty(usernameInput) || !TextUtils.isEmpty(emailInput) || !TextUtils.isEmpty(phoneNoInput) || !TextUtils.isEmpty(passwordInput) || !TextUtils.isEmpty(confirmInput)){
             if (isValidUsername(usernameInput)){
                 if (Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()){
-                    if (isValidPhoneNumber(phoneNoInput)){
-                        if (isValidPassword(passwordInput)){
-                            if (confirmInput.equals(passwordInput)){
+                    String emailDomain = extractEmailDomain(emailInput);
+                    if (AUTHENTIC_EMAIL_DOMAINS.contains(emailDomain)) {
+                        if (isValidPhoneNumber(phoneNoInput)){
+                            if (isValidPassword(passwordInput)){
+                                if (confirmInput.equals(passwordInput)){
 //                                when all input validation are correct, check if user already exist or not. if not exist create new account.
-                                validateAccount(usernameInput, emailInput, phoneNoInput, confirmInput);
+                                    validateAccount(usernameInput, emailInput, phoneNoInput, confirmInput);
+                                }else{
+                                    confirmPasswordTextInputLayout.setError(getString(R.string.error_msg_invalid_password_matching));
+                                }
                             }else{
-                                confirmPasswordTextInputLayout.setError(getString(R.string.error_msg_invalid_password_matching));
+                                passwordTextInputLayout.setError(getString(R.string.error_msg_invalid_password_created));
                             }
-                        }else{
-                            passwordTextInputLayout.setError(getString(R.string.error_msg_invalid_password_created));
+                        }else {
+                            phoneNoInputLayout.setError(getString(R.string.error_msg_invalid_phoneNo));
                         }
-                    }else {
-                        phoneNoInputLayout.setError(getString(R.string.error_msg_invalid_phoneNo));
-                    }
-                }else{
-                    emailTextInputLayout.setError(getString(R.string.error_msg_invalid_email));
-                }
-            }else {
-                usernameTextInputLayout.setError(getString(R.string.error_msg_invalid_username));
-            }
+                    }else {emailTextInputLayout.setError(getString(R.string.invalid_domain));}
+                }else {emailTextInputLayout.setError(getString(R.string.error_msg_invalid_email));}
+            }else {usernameTextInputLayout.setError(getString(R.string.error_msg_invalid_username));}
         }else {
 
             usernameTextInputLayout.setError(getString(R.string.required_field));
@@ -302,6 +322,7 @@ public class SignupFragment extends Fragment {
                                                     dismissLoadingDialog();
                                                     if (task.isSuccessful()) {
                                                         Toast.makeText(getContext(), R.string.account_successfully_created, Toast.LENGTH_SHORT).show();
+                                                        sendVerificationEmail(emailVA);
                                                         showSignIn();
                                                     }
                                                 });
@@ -330,6 +351,75 @@ public class SignupFragment extends Fragment {
 
     }
 
+    private void sendVerificationEmail(String emailVA) {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser user = auth.getCurrentUser();
+
+        if (user != null) {
+            ((FirebaseUser) user).sendEmailVerification()
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            SpannableString spannableString = null;
+                            ClickableSpan clickableSpan = null;
+                            String clickableText = null;
+                            if (task.isSuccessful()) {
+                                String emailProvider = extractEmailDomain(emailVA);
+                                clickableText = "Verify your email with " + emailProvider;
+                                spannableString = new SpannableString(clickableText);
+                                clickableSpan = new ClickableSpan() {
+                                    @Override
+                                    public void onClick(@NonNull View widget) {
+                                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getEmailAppLink(emailProvider)));
+                                        startActivity(intent);
+                                    }
+                                };
+                                spannableString.setSpan(clickableSpan, 0, clickableText.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                WindowDecorActionBar.TabImpl textView;
+//
+//                          Display a toast message or set this text to a TextView in your UI
+//                            textView.setText(spannableString, TextView.BufferType.SPANNABLE);
+                                // Inform the user to check their email for verification
+                                Toast.makeText(getContext(), "Verification email sent. Please check your email.", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "Failed to send verification email.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+        } else {
+            // User is not authenticated, handle this situation as needed
+            Toast.makeText(getContext(), "User not authenticated.", Toast.LENGTH_SHORT).show();
+            // Redirect the user to the login screen or handle the situation accordingly
+        }
+    }
+
+    private String getEmailAppLink(String emailProvider) {
+        // Customize the links based on the email provider
+        if (emailProvider.contains("gmail")) {
+            return "https://mail.google.com";
+        } else if (emailProvider.contains("yahoo")) {
+            return "https://mail.yahoo.com";
+        }else if (emailProvider.contains("outlook")) {
+            return "https://mail.yahoo.com";
+        } else {
+            // Add more providers as needed
+            return "https://example.com"; // Default link for unrecognized providers
+        }
+    }
+
+    private String extractEmailDomain(String email) {
+        String domain = "";
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        Matcher matcher = pattern.matcher(email);
+        if (matcher.matches()) {
+            String[] parts = email.split("@");
+            if (parts.length > 1) {
+                domain = parts[1];
+            }
+        }
+        return domain;
+    }
     private boolean isValidUsername(String username) {
         String usernameREX ="^[a-zA-Z0-9]{10,15}$";
         return username.matches(usernameREX);

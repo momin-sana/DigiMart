@@ -43,6 +43,7 @@
     <string name="please_wait_data_is_being_loaded">Please wait data is being loaded</string>
     <string name="sign_in_with_google">Sign in with Google</string>
     <string name="signup_with_google">Signup with Google</string>
+    <string name="invalid_domain">Invalid Domain</string>
 
 
 </resources>
