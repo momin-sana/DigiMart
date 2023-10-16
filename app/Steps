@@ -20,21 +20,8 @@ Create activity and Design xml for with *signup and signing fragments*
                 >validateAccount(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA)
                     >in this method I have used   // Sanitize the email to create a valid database key
                         here OR WE CAN Also USE UID // i think this is much better to user for future data storage.
-                    f    FirebaseUser currentUser = mAuth.getCurrentUser();
-                        private void validateAccount(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA) {
-                            final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
 
-                            FirebaseAuth mAuth = FirebaseAuth.getInstance();
-                            FirebaseUser currentUser = mAuth.getCurrentUser();
-
-                            if (currentUser != null) {
-                                String uid = currentUser.getUid();
-
-                                // Check if a user with this UID exists in the database, have also added username here, to cross check email and username under same uid
-                                Code in SignupFragment.java >  databaseReference.child("Users").orderByChild("username").equalTo(usernameVA)....
-
-                            }
-                        }
+????? email confirmation ?????????????
 <<<<<<<<<<<<<<<<<<<<<<< HERE SIGNUP IS FINISHED <<<<<<<<<<<<<<<<<<<<<<<
  // DATE: 13 SEPTEMBER 2023
 
@@ -46,8 +33,8 @@ Create LoadingDialog Fragment
         > Apply screen shaking animation
         > Fields Validations
             > Check user exists or not, from USER CLASS we will get the data
-        > Account Validaton
-        > Google Auth
+        > Account Validation
+        > Google Auth added with *GOOGLE AUTH HANDLER CLASS*
         > Forgot password
         > Remember me > if marked checked and already login, next time dont ask to login
         > signIn btn > navigate to home page
@@ -62,3 +49,4 @@ Create LoadingDialog Fragment
      WITH PREVALENT CLASS*
         > to get current user
         > will be used as forgot password and remember me
+        > paper package willbe use

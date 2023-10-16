@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,9 +8,6 @@
     tools:context=".SigninFragment"
     android:background="@drawable/gradient_splash_bg">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
 
         <TextView
             android:id="@+id/textView2"
@@ -24,7 +21,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
-            android:id="@+id/button6"
+            android:id="@+id/logoutBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Logout"
@@ -33,6 +30,4 @@
             android:textAlignment="center"
             app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

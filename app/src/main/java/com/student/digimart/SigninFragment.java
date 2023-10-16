@@ -1,6 +1,7 @@
 package com.student.digimart;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -51,6 +52,8 @@ import com.student.digimart.Prevalent.Prevalent;
 
 import java.util.Objects;
 
+import io.paperdb.Paper;
+
 
 public class SigninFragment extends Fragment {
 
@@ -63,8 +66,6 @@ public class SigninFragment extends Fragment {
     private final String userDb = "Users";
     private GoogleSignInClient googleSignInClient;
     private GoogleAuthHandler googleAuthHandler;
-
-
 
 
     public SigninFragment() {
@@ -119,6 +120,8 @@ public class SigninFragment extends Fragment {
         password = view.findViewById(R.id.enter_password_input_signin);
         emailTIL = view.findViewById(R.id.enterEmailTextInputLayoutSignin);
         passwordTIL = view.findViewById(R.id.enterPasswordInputLayoutSignin);
+        rememberMe = view.findViewById(R.id.rememberMeCheckBox);
+        Paper.init(requireActivity());
 
         email.addTextChangedListener(new TextWatcher() {
             @Override
@@ -155,24 +158,11 @@ public class SigninFragment extends Fragment {
             }
         });
 
-
-        // Initialize sign in options the client-id is copied form google-services.json file
-        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("47539634118-5ef3e5eqs3bdpgq9a5naao554a02tujg.apps.googleusercontent.com")
-                .requestEmail()
-                .build();
-        Log.d("googleSignInOptions", "googleSignInOptions: " + googleSignInOptions);
-
-        // Initialize sign in client
-        googleSignInClient = GoogleSignIn.getClient(requireActivity(), googleSignInOptions);
-        Log.d("googleSignInClient", "googleSignInClient: " + googleSignin);
-
         googleSignin.setOnClickListener(v -> {
             Log.d("SignIn with Google", "SignIn with Google BTN clicked ");
             Intent googleSignInApiSignInIntent = googleSignInClient.getSignInIntent();
             intentActivityResultLauncher.launch(googleSignInApiSignInIntent);
 
-            Log.d("SignIn with Google", "SignIn with Google intent: " + googleSignInApiSignInIntent);
         });
 
         createAccTV.setOnClickListener(v -> showRegistration());
@@ -180,8 +170,33 @@ public class SigninFragment extends Fragment {
         btnSignIn.setOnClickListener(v -> validSignIn());
         return view;
     }
+    @Override
+    public void onStart() {
+        super.onStart();
+        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("47539634118-5ef3e5eqs3bdpgq9a5naao554a02tujg.apps.googleusercontent.com")
+                .requestEmail()
+                .build();
+        googleSignInClient = GoogleSignIn.getClient(requireActivity(), googleSignInOptions);
 
-
+        // Set up the ActivityResultLauncher for handling Google Sign-In result
+//        intentActivityResultLauncher.launch(new Intent(requireActivity(), Home.class));
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Clear email and password fields when the fragment is resumed
+        email.setText("");
+        password.setText("");
+        emailTIL.setError(null);
+        passwordTIL.setError(null);
+    }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Dismiss loading dialog if it's showing when the fragment is destroyed
+        dismissLoadingDialog();
+    }
     private void validSignIn() { //check inputs matches data, if yes login, if no show error
 
         String emailInput = Objects.requireNonNull(email.getText()).toString().trim();
@@ -205,6 +220,12 @@ public class SigninFragment extends Fragment {
     private void checkDataBase(@NonNull String email, String password) {
         String sanitizedEmail = email.replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
         loadingDialog();
+
+        if (rememberMe.isChecked()){
+            Paper.book().write(Prevalent.UserEmailKey, email);
+            Paper.book().write(Prevalent.UserPasswordKey, password);
+        }
+
         final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -257,8 +278,8 @@ public class SigninFragment extends Fragment {
         errorAnimationShake();
         String emailText = Objects.requireNonNull(email.getText()).toString().trim();
         ImageView cancel, icon;
-        View alertCustomDialog = LayoutInflater.from(requireActivity()).inflate(R.layout.dialogbox_userexists, null);
-        Drawable drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.account_alert);
+        View alertCustomDialog = LayoutInflater.from(requireContext()).inflate(R.layout.dialogbox_userexists, null);
+        Drawable drawable = ContextCompat.getDrawable(requireContext(), R.drawable.account_alert);
         Button siginBtn = alertCustomDialog.findViewById(R.id.sign_in_btn);
         siginBtn.setText(R.string.signup);
         icon = alertCustomDialog.findViewById(R.id.dialog_icon);
@@ -267,7 +288,7 @@ public class SigninFragment extends Fragment {
         alertTV.setText("Account with " + emailText + " does not exist. \n Please Create an Account");
         cancel = alertCustomDialog.findViewById(R.id.cancel_button);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setView(alertCustomDialog);
         final AlertDialog alertDialog = builder.create();
         if (alertDialog.getWindow() != null) {
@@ -277,24 +298,20 @@ public class SigninFragment extends Fragment {
         dismissLoadingDialog();
 
         cancel.setOnClickListener(v -> {
-//            dismissLoadingDialog();
             alertDialog.dismiss();
             email.setText("");
             password.setText("");
             emailTIL.setError("");
             passwordTIL.setError("");
-
         });
 
         siginBtn.setOnClickListener(v -> {
-//            dismissLoadingDialog();
+            showRegistration();
             alertDialog.dismiss();
             email.setText("");
             password.setText("");
             emailTIL.setError("");
             passwordTIL.setError("");
-            showRegistration();
-
         });
     }
 
@@ -320,16 +337,17 @@ public class SigninFragment extends Fragment {
     private final ActivityResultLauncher<Intent> intentActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == AppCompatActivity.RESULT_OK){
+                    loadingDialog();
                     Intent data = result.getData();
                     Log.d("ActivityResultLauncher", "result.getResultCode(): " + result.getResultCode() + " \n data :" + data);
                     googleAuthHandler.signInWithGoogle(requireActivity(), data, new GoogleAuthHandler.OnGoogleSignInResultListener() {
                         @Override
                         public void onGoogleSignInSuccess(Users user) {
                             // Handle successful Google Sign-In
+                            dismissLoadingDialog();
                             Prevalent.setCurrentOnlineUser(user);
                             Intent intent = new Intent(getActivity(), Home.class);
                             startActivity(intent);
-                            // Proceed with further actions like navigating to the next screen
                         }
 
                         @Override
@@ -342,5 +360,6 @@ public class SigninFragment extends Fragment {
                     });
                 }
     });
+
 
 }
