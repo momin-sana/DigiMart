@@ -7,8 +7,10 @@ import androidx.fragment.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -47,7 +49,24 @@ public class MainActivity extends AppCompatActivity {
 
     private void allowAccess(String email, String password) {
         String sanitizedEmail = email.replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
+        // Check Firebase Authentication
+        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password).addOnCompleteListener(this, task -> {
+            if (task.isSuccessful()) {
+                // Firebase Authentication successful
+                dismissLoadingDialog();
+                Intent intent = new Intent(MainActivity.this, Home.class);
+                intent.putExtra("userEmail", email);
+                startActivity(intent);
+                finish();
+            } else {
+                // Firebase Authentication failed, check Realtime Database
+                checkRealtimeDatabase(sanitizedEmail, password);
+            }
+        });
 
+    }
+
+    private void checkRealtimeDatabase(String sanitizedEmail, String password) {
         final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -56,21 +75,19 @@ public class MainActivity extends AppCompatActivity {
                 if (snapshot.child(userDb).child(sanitizedEmail).exists()){
                     Users usersData = snapshot.child(userDb).child(sanitizedEmail).getValue(Users.class);
                     assert usersData != null;
-                    if (usersData.getEmail().equals(email)){
-                        if (usersData.getPassword().equals(password)){
-                            dismissLoadingDialog();
-                            Intent intent = new Intent(MainActivity.this, Home.class);
-                            startActivity(intent);
-                        }else {
-                            dismissLoadingDialog();
-//                            errorAnimationShake();
-//                            passwordTIL.setError(getString(R.string.error_msg_invalid_password_matching));
-                        }
+                    String userEmailFromDb = usersData.getEmail().toLowerCase();
+                    Log.d("Debug", "user remembered: " + userEmailFromDb);
+                    if (usersData.getEmail().equals(sanitizedEmail) && usersData.getPassword().equals(password)) {
+                        dismissLoadingDialog();
+                        Intent intent = new Intent(MainActivity.this, Home.class);
+                        intent.putExtra("userEmail", userEmailFromDb);
+                        startActivity(intent);
+                        finish();
+                    }else {
+                        dismissLoadingDialog();
                     }
                 } else{
                     dismissLoadingDialog();
-//                    errorAnimationShake();
-//                    userDoesntExistsDialog();
                 }
             }
 

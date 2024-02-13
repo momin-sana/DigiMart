@@ -10,18 +10,14 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.WindowDecorActionBar;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Handler;
 import android.text.Editable;
-import android.text.SpannableString;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.style.ClickableSpan;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,9 +26,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -42,8 +35,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import java.util.HashMap;
+import com.student.digimart.Models.Users;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -63,7 +55,7 @@ public class SignupFragment extends Fragment {
     private Button signupBtn;
     private TextInputEditText createUsername, email, createPassword, confirmPassword, phoneNo;
     private TextInputLayout emailTextInputLayout, usernameTextInputLayout, passwordTextInputLayout, confirmPasswordTextInputLayout, phoneNoInputLayout;
-    AlertDialog alertDialog;
+//    AlertDialog alertDialog;
 
     public SignupFragment() {
         // Required empty public constructor
@@ -310,22 +302,7 @@ public class SignupFragment extends Fragment {
                                     if (emailSnapshot.exists()) {
                                         userAlreadyExistsDialog();
                                     } else {
-                                        // Neither username nor email is in use, proceed with account creation
-                                        HashMap<String, Object> userDataMap = new HashMap<>();
-                                        userDataMap.put("username", usernameVA);
-                                        userDataMap.put("email", emailVA);
-                                        userDataMap.put("phone", phoneNumberVA);
-                                        userDataMap.put("password", cPasswordVA);
-
-                                        databaseReference.child("Users").child(sanitizedEmail).updateChildren(userDataMap)
-                                                .addOnCompleteListener(task -> {
-                                                    dismissLoadingDialog();
-                                                    if (task.isSuccessful()) {
-                                                        Toast.makeText(getContext(), R.string.account_successfully_created, Toast.LENGTH_SHORT).show();
-                                                        sendVerificationEmail(emailVA);
-                                                        showSignIn();
-                                                    }
-                                                });
+                                        createFirebaseUser(usernameVA, emailVA, phoneNumberVA, cPasswordVA);
                                     }
                                 }
 
@@ -351,47 +328,57 @@ public class SignupFragment extends Fragment {
 
     }
 
-    private void sendVerificationEmail(String emailVA) {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        FirebaseUser user = auth.getCurrentUser();
+    private void createFirebaseUser(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA) {
+        String sanitizedEmail = emailVA.replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(emailVA, cPasswordVA)
+                .addOnCompleteListener(requireActivity(), task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+                        if (firebaseUser != null) {
+                            sendVerificationEmail(firebaseUser, emailVA);
 
-        if (user != null) {
-            ((FirebaseUser) user).sendEmailVerification()
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            SpannableString spannableString = null;
-                            ClickableSpan clickableSpan = null;
-                            String clickableText = null;
-                            if (task.isSuccessful()) {
-                                String emailProvider = extractEmailDomain(emailVA);
-                                clickableText = "Verify your email with " + emailProvider;
-                                spannableString = new SpannableString(clickableText);
-                                clickableSpan = new ClickableSpan() {
-                                    @Override
-                                    public void onClick(@NonNull View widget) {
-                                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getEmailAppLink(emailProvider)));
-                                        startActivity(intent);
-                                    }
-                                };
-                                spannableString.setSpan(clickableSpan, 0, clickableText.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                WindowDecorActionBar.TabImpl textView;
-//
-//                          Display a toast message or set this text to a TextView in your UI
-//                            textView.setText(spannableString, TextView.BufferType.SPANNABLE);
-                                // Inform the user to check their email for verification
-                                Toast.makeText(getContext(), "Verification email sent. Please check your email.", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(getContext(), "Failed to send verification email.", Toast.LENGTH_SHORT).show();
-                            }
+                            // Save user details to Realtime Database
+                            final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                            DatabaseReference userRef = databaseReference.child("Users").child(sanitizedEmail);
+                            Users user = new Users(sanitizedEmail, cPasswordVA, phoneNumberVA, usernameVA);
+                            userRef.setValue(user).addOnCompleteListener(newUserTask -> {
+                                dismissLoadingDialog();
+                                if (task.isSuccessful()) {
+                                    // Successfully saved user details in the Realtime Database
+                                    Toast.makeText(requireContext(), "Registration successful", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    // Handle database saving failure
+                                    Toast.makeText(requireContext(), "Database saving failed: " + task.getException(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    } else {
+                        dismissLoadingDialog();
+                        Toast.makeText(getContext(), "Failed to create account: " + Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void sendVerificationEmail(FirebaseUser firebaseUser, String emailVA) {
+        if (firebaseUser != null) {
+            firebaseUser.sendEmailVerification()
+                    .addOnCompleteListener(task -> {
+                        dismissLoadingDialog();
+                        if (task.isSuccessful()) {
+                            emptyFields();
+                            Toast.makeText(getContext(), "Verification email sent. Please check your email.", Toast.LENGTH_SHORT).show();
+                            verificationEmailDialog();
+                        } else {
+                            Toast.makeText(getContext(), "Failed to send verification email.", Toast.LENGTH_SHORT).show();
                         }
                     });
         } else {
-            // User is not authenticated, handle this situation as needed
+            dismissLoadingDialog();
             Toast.makeText(getContext(), "User not authenticated.", Toast.LENGTH_SHORT).show();
             // Redirect the user to the login screen or handle the situation accordingly
         }
     }
+
 
     private String getEmailAppLink(String emailProvider) {
         // Customize the links based on the email provider
@@ -434,6 +421,19 @@ public class SignupFragment extends Fragment {
 
     }
 
+    private void emptyFields(){
+        createUsername.setText("");
+        email.setText("");
+        phoneNo.setText("");
+        createPassword.setText("");
+        confirmPassword.setText("");
+        usernameTextInputLayout.setError("");
+        usernameTextInputLayout.setError("");
+        emailTextInputLayout.setError("");
+        phoneNoInputLayout.setError("");
+        passwordTextInputLayout.setError("");
+        confirmPasswordTextInputLayout.setError("");
+    }
     private void userAlreadyExistsDialog() {
         ImageView cancel, icon;
         View alertCustomDialog = LayoutInflater.from(requireActivity()).inflate(R.layout.dialogbox_userexists, null);
@@ -465,6 +465,53 @@ public class SignupFragment extends Fragment {
 
         siginBtn.setOnClickListener(v -> {
             showSignIn();
+            alertDialog.dismiss();
+        });
+    }
+    private void verificationEmailDialog() {
+        ImageView cancel, icon;
+        View alertCustomDialog = LayoutInflater.from(requireActivity()).inflate(R.layout.dialogbox_userexists, null);
+        Drawable drawable = ContextCompat.getDrawable(requireActivity(), R.drawable.emailverify22);
+
+        Button verifyBtn = alertCustomDialog.findViewById(R.id.sign_in_btn);
+        verifyBtn.setText(R.string.verify_email);
+
+        icon = alertCustomDialog.findViewById(R.id.dialog_icon);
+        icon.setImageDrawable(drawable);
+
+        TextView alertTV = alertCustomDialog.findViewById(R.id.alert_textview);
+        alertTV.setText(getString(R.string.verify_email_txt));
+
+        cancel = alertCustomDialog.findViewById(R.id.cancel_button);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+        builder.setView(alertCustomDialog);
+        final AlertDialog alertDialog = builder.create();
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        alertDialog.show();
+        dismissLoadingDialog();
+        cancel.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            createUsername.setText("");
+            email.setText("");
+            phoneNo.setText("");
+            createPassword.setText("");
+            confirmPassword.setText("");
+        });
+
+        verifyBtn.setOnClickListener(v -> {
+            String emailText = Objects.requireNonNull(email.getText()).toString().trim();
+            String domain = extractEmailDomain(emailText);
+            String emailAppLink = getEmailAppLink(domain);
+
+            if (!emailAppLink.isEmpty()) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(emailAppLink));
+                startActivity(intent);
+            } else {
+                Toast.makeText(getContext(), "Email provider link not found.", Toast.LENGTH_SHORT).show();
+            }
             alertDialog.dismiss();
         });
     }

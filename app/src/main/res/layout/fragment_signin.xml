@@ -130,8 +130,6 @@
             android:id="@+id/create_account_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:padding="10dp"
             android:text="@string/create_account"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/light_purple"
@@ -140,6 +138,21 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/signin_btn" />
+
+        <TextView
+            android:id="@+id/iam_admin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/i_am_admin"
+            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/light_purple"
+            app:autoSizeTextType="uniform"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/create_account_tv" />
 
         <CheckBox
             android:id="@+id/rememberMeCheckBox"

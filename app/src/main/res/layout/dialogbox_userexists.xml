@@ -47,6 +47,24 @@
                 android:padding="15dp"
                 android:lineSpacingExtra="10dp"/>
 
+            <EditText
+                android:id="@+id/emailInput_EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/light_purple"
+                android:textAlignment="center"
+                android:textSize="16sp"
+                android:padding="15dp"
+                android:visibility="invisible"
+                android:background="@drawable/edit_text_underline"
+                android:lineSpacingExtra="10dp"
+                android:hint="@string/enter_your_email"
+                android:textColorHint="@color/dark_dirty_violet"
+                android:maxLines="1"
+                android:inputType="textEmailAddress"
+                android:autofillHints="" />
+
             <Button
                 android:id="@+id/sign_in_btn"
                 android:layout_width="wrap_content"
@@ -54,6 +72,7 @@
                 android:textColor="@color/bg_dark_violet"
                 android:backgroundTint="@color/light_purple"
                 android:gravity="center"
+                android:text=""
                 android:layout_gravity="center"
                 android:layout_marginTop="10dp"/>
 

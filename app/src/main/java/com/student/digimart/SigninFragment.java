@@ -1,7 +1,6 @@
 package com.student.digimart;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -21,6 +20,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Handler;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -32,6 +32,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,6 +43,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -56,6 +58,7 @@ import io.paperdb.Paper;
 
 
 public class SigninFragment extends Fragment {
+    private static final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
 
     TextView createAccTV, forgotPassword, googleSignin;
     Button btnSignIn;
@@ -63,7 +66,6 @@ public class SigninFragment extends Fragment {
     private TextInputEditText password ;
     private TextInputLayout emailTIL, passwordTIL;
     CheckBox rememberMe;
-    private final String userDb = "Users";
     private GoogleSignInClient googleSignInClient;
     private GoogleAuthHandler googleAuthHandler;
 
@@ -121,6 +123,7 @@ public class SigninFragment extends Fragment {
         emailTIL = view.findViewById(R.id.enterEmailTextInputLayoutSignin);
         passwordTIL = view.findViewById(R.id.enterPasswordInputLayoutSignin);
         rememberMe = view.findViewById(R.id.rememberMeCheckBox);
+        forgotPassword = view.findViewById(R.id.forgot_password);
         Paper.init(requireActivity());
 
         email.addTextChangedListener(new TextWatcher() {
@@ -160,6 +163,7 @@ public class SigninFragment extends Fragment {
 
         googleSignin.setOnClickListener(v -> {
             Log.d("SignIn with Google", "SignIn with Google BTN clicked ");
+            loadingDialog();
             Intent googleSignInApiSignInIntent = googleSignInClient.getSignInIntent();
             intentActivityResultLauncher.launch(googleSignInApiSignInIntent);
 
@@ -168,8 +172,74 @@ public class SigninFragment extends Fragment {
         createAccTV.setOnClickListener(v -> showRegistration());
 
         btnSignIn.setOnClickListener(v -> validSignIn());
+
+        forgotPassword.setOnClickListener(view1 -> {
+            showRecoverPasswordDialog();
+        });
         return view;
     }
+
+    private void showRecoverPasswordDialog() {
+        errorAnimationShake();
+        ImageView cancel, icon;
+        EditText emailInputET;
+        View alertCustomDialog = LayoutInflater.from(requireContext()).inflate(R.layout.dialogbox_userexists, null);
+        Drawable drawable = ContextCompat.getDrawable(requireContext(), R.drawable.account_alert);
+        Button recoverBtn = alertCustomDialog.findViewById(R.id.sign_in_btn);
+        recoverBtn.setText(R.string.recover);
+        icon = alertCustomDialog.findViewById(R.id.dialog_icon);
+        icon.setImageDrawable(drawable);
+        TextView alertTV = alertCustomDialog.findViewById(R.id.alert_textview);
+        alertTV.setText(R.string.recover_password);
+        emailInputET = alertCustomDialog.findViewById(R.id.emailInput_EditText);
+        emailInputET.setVisibility(View.VISIBLE);
+        emailInputET.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        cancel = alertCustomDialog.findViewById(R.id.cancel_button);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setView(alertCustomDialog);
+        final AlertDialog alertDialog = builder.create();
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        alertDialog.show();
+        dismissLoadingDialog();
+        alertDialog.setCanceledOnTouchOutside(false);
+
+        cancel.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            email.setText("");
+            password.setText("");
+            emailTIL.setError("");
+            passwordTIL.setError("");
+        });
+
+        recoverBtn.setOnClickListener(v -> {
+            String emailInput = emailInputET.getText().toString().trim();
+            if (!TextUtils.isEmpty(emailInput)) {
+                sendPasswordResetEmail(emailInput);
+            } else {
+                Toast.makeText(requireContext(), "Please enter your email", Toast.LENGTH_SHORT).show();
+            }
+            alertDialog.dismiss();
+            email.setText("");
+            password.setText("");
+            emailTIL.setError("");
+            passwordTIL.setError("");
+        });
+    }
+
+    private void sendPasswordResetEmail(String email) {
+        FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(requireContext(), "Password reset email sent. Check your inbox.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(requireContext(), "Failed to send password reset email. Please check your email address.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -202,10 +272,7 @@ public class SigninFragment extends Fragment {
         String emailInput = Objects.requireNonNull(email.getText()).toString().trim();
         String passwordInput = Objects.requireNonNull(password.getText()).toString().trim();
 
-        if (TextUtils.isEmpty(emailInput)) {
-            errorAnimationShake();
-            emailTIL.setError(getString(R.string.required_field));
-        } if (!Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()) {
+        if (TextUtils.isEmpty(emailInput) || !Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()) {
             errorAnimationShake();
             emailTIL.setError(getString(R.string.error_msg_invalid_email));
             return;
@@ -216,51 +283,86 @@ public class SigninFragment extends Fragment {
             checkDataBase(emailInput, passwordInput);
         }
     }
-
     private void checkDataBase(@NonNull String email, String password) {
-        String sanitizedEmail = email.replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
+        String sanitizedEmail = email.trim().replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
         loadingDialog();
-
         if (rememberMe.isChecked()){
             Paper.book().write(Prevalent.UserEmailKey, email);
             Paper.book().write(Prevalent.UserPasswordKey, password);
         }
-
-        final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                dismissLoadingDialog();
-                if (snapshot.child(userDb).child(sanitizedEmail).exists()){
-                    Users usersData = snapshot.child(userDb).child(sanitizedEmail).getValue(Users.class);
-                    assert usersData != null;
-                    if (usersData.getEmail().equals(email)){
-                        if (usersData.getPassword().equals(password)){
-                            dismissLoadingDialog();
-                            Intent intent = new Intent(getActivity(), Home.class);
-                            startActivity(intent);
-                            }else {
-                            dismissLoadingDialog();
-                            errorAnimationShake();
-                            passwordTIL.setError(getString(R.string.error_msg_invalid_password_matching));
-                        }
-                    }
-                } else{
-                    dismissLoadingDialog();
-                    errorAnimationShake();
-                    userDoesntExistsDialog();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                dismissLoadingDialog();
-                // Handle database error here if needed
-                Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
-            }
+//        Check Firebase Authentication
+        FirebaseAuth.getInstance().signInWithEmailAndPassword(email,password).addOnCompleteListener(requireActivity(), task -> {
+           if (task.isSuccessful()){
+               dismissLoadingDialog();
+               Intent intent = new Intent(getActivity(), Home.class);
+               intent.putExtra("userEmail", email);
+               startActivity(intent);
+           }else {
+               checkRealtimeDatabase(sanitizedEmail, password);
+           }
         });
     }
 
+private void checkRealtimeDatabase(String enteredEmail, String password) {
+    Log.d("checkRealtimeDatabase", "checkRealtimeDatabase started");
+    String sanitizedEmail = enteredEmail.trim().replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
+    Log.d("checkRealtimeDatabase", "Sanitized Email: " + sanitizedEmail);
+    Log.d("checkRealtimeDatabase", "password: " + password);
+    Log.d("checkRealtimeDatabase", "enteredEmail: " + enteredEmail);
+
+
+    String userDb = "Users";
+    databaseReference.child(userDb).child(sanitizedEmail)
+             .addListenerForSingleValueEvent(new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot snapshot) {
+            Log.d("checkRealtimeDatabase", "db data change");
+            dismissLoadingDialog();
+            Log.d("checkRealtimeDatabase", "snapshot: " + snapshot);
+            if (snapshot.exists()) {
+                Log.d("checkRealtimeDatabase", "User exists in the database");
+                // User found in the Realtime Database
+                Users usersData = snapshot.getValue(Users.class);
+                Log.d("checkRealtimeDatabase", "User data: " + usersData);
+
+                if (usersData != null) {
+                    Log.d("checkRealtimeDatabase", "Entered Password: " + password);
+                    Log.d("checkRealtimeDatabase", "Database Password: " + usersData.getPassword());
+
+                    if (TextUtils.equals(usersData.getPassword(), password)) {
+
+                        // Password matches, start Home Activity
+                        Intent intent = new Intent(getActivity(), Home.class);
+                        intent.putExtra("userEmail", usersData.getEmail().toLowerCase());
+                        startActivity(intent);
+                    }  else {
+                        errorAnimationShake();
+                        passwordTIL.setError(getString(R.string.error_msg_invalid_password_matching));
+                    }
+                } else {
+                    Toast.makeText(getContext(), "User data is null", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                // User not found in the Realtime Database
+                handleUserNotFound();
+            }
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError error) {
+            dismissLoadingDialog();
+            // Handle database error here if needed
+            Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
+        }
+
+        private void handleUserNotFound() {
+            dismissLoadingDialog();
+            errorAnimationShake();
+            Log.d("checkRealtimeDatabase", "User not found in the database");
+            userDoesntExistsDialog();
+        }
+    });
+}
     private void showRegistration(){
         createAccTV.setTextColor(requireActivity().getColor(R.color.dark_dirty_violet));
         createAccTV.setTypeface(Typeface.DEFAULT_BOLD);
@@ -325,6 +427,7 @@ public class SigninFragment extends Fragment {
     }
     private void loadingDialog() {
         LoadingDialogFragment loadingDialogFragment = new LoadingDialogFragment();
+        loadingDialogFragment.setCancelable(false);
         loadingDialogFragment.show(getChildFragmentManager(), "loading_dialog");
     }
     private void dismissLoadingDialog() {
@@ -337,7 +440,6 @@ public class SigninFragment extends Fragment {
     private final ActivityResultLauncher<Intent> intentActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == AppCompatActivity.RESULT_OK){
-                    loadingDialog();
                     Intent data = result.getData();
                     Log.d("ActivityResultLauncher", "result.getResultCode(): " + result.getResultCode() + " \n data :" + data);
                     googleAuthHandler.signInWithGoogle(requireActivity(), data, new GoogleAuthHandler.OnGoogleSignInResultListener() {
@@ -346,8 +448,17 @@ public class SigninFragment extends Fragment {
                             // Handle successful Google Sign-In
                             dismissLoadingDialog();
                             Prevalent.setCurrentOnlineUser(user);
-                            Intent intent = new Intent(getActivity(), Home.class);
-                            startActivity(intent);
+
+                            String userEmail = user.getEmail();
+
+                            loadingDialog();
+                           new Handler().postDelayed(() -> {
+                               dismissLoadingDialog();
+                               Intent intent = new Intent(getActivity(), Home.class);
+                               intent.putExtra("userEmail", userEmail);
+                               intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                               startActivity(intent);
+                           }, 2000);
                         }
 
                         @Override

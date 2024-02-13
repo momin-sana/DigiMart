@@ -34,6 +34,8 @@
     <string name="user_already_exists">User Already Exists</string>
     <string name="cancel_button">Cancel Button</string>
     <string name="image_view">Image View</string>
+    <string name="verify_email">Verify Email</string>
+    <string name="verify_email_txt">Please verify your email</string>
 
     <string name="yes">Yes</string>
     <string name="sure_to_exit">Are you sure to exit?</string>
@@ -44,6 +46,11 @@
     <string name="sign_in_with_google">Sign in with Google</string>
     <string name="signup_with_google">Signup with Google</string>
     <string name="invalid_domain">Invalid Domain</string>
+    <string name="logout">Logout</string>
+    <string name="enter_your_email">Enter your email</string>
+    <string name="i_am_admin">I am Admin</string>
+    <string name="recover">Recover</string>
+    <string name="recover_password">Recover Password</string>
 
 
 </resources>
