@@ -51,6 +51,8 @@
     <string name="i_am_admin">I am Admin</string>
     <string name="recover">Recover</string>
     <string name="recover_password">Recover Password</string>
+    <string name="i_am_a_user">I am a User</string>
+    <string name="login_as_admin">Login as Admin</string>
 
 
 </resources>

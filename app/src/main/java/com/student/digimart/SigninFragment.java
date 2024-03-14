@@ -49,6 +49,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.student.digimart.Models.Admins;
 import com.student.digimart.Models.Users;
 import com.student.digimart.Prevalent.Prevalent;
 
@@ -58,9 +59,9 @@ import io.paperdb.Paper;
 
 
 public class SigninFragment extends Fragment {
-    private static final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+    private static DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
 
-    TextView createAccTV, forgotPassword, googleSignin;
+    TextView createAccTV, forgotPassword, googleSignin, iAMAdmin, iAMUser ;
     Button btnSignIn;
     private TextInputEditText email;
     private TextInputEditText password ;
@@ -68,6 +69,7 @@ public class SigninFragment extends Fragment {
     CheckBox rememberMe;
     private GoogleSignInClient googleSignInClient;
     private GoogleAuthHandler googleAuthHandler;
+    private String parentDpName = "Users";
 
 
     public SigninFragment() {
@@ -124,6 +126,9 @@ public class SigninFragment extends Fragment {
         passwordTIL = view.findViewById(R.id.enterPasswordInputLayoutSignin);
         rememberMe = view.findViewById(R.id.rememberMeCheckBox);
         forgotPassword = view.findViewById(R.id.forgot_password);
+        iAMAdmin = view.findViewById(R.id.iam_admin);
+        iAMUser = view.findViewById(R.id.iam_user);
+
         Paper.init(requireActivity());
 
         email.addTextChangedListener(new TextWatcher() {
@@ -175,6 +180,23 @@ public class SigninFragment extends Fragment {
 
         forgotPassword.setOnClickListener(view1 -> {
             showRecoverPasswordDialog();
+        });
+
+        iAMAdmin.setOnClickListener(view12 -> {
+            btnSignIn.setText(R.string.login_as_admin);
+            iAMAdmin.setVisibility(View.INVISIBLE);
+            iAMUser.setVisibility(View.VISIBLE);
+            parentDpName = "Admins";
+            databaseReference = FirebaseDatabase.getInstance().getReference(parentDpName); // Update the database reference here
+        });
+
+        iAMUser.setOnClickListener(view13 -> {
+            btnSignIn.setText(R.string.signin);
+            iAMAdmin.setVisibility(View.VISIBLE);
+            iAMUser.setVisibility(View.INVISIBLE);
+            parentDpName = "Users";
+            databaseReference = FirebaseDatabase.getInstance().getReference(parentDpName); // Update the database reference here
+
         });
         return view;
     }
@@ -298,43 +320,33 @@ public class SigninFragment extends Fragment {
                intent.putExtra("userEmail", email);
                startActivity(intent);
            }else {
-               checkRealtimeDatabase(sanitizedEmail, password);
+               dismissLoadingDialog();
+               checkRealtimeDatabase(parentDpName, sanitizedEmail, password);
            }
         });
     }
 
-private void checkRealtimeDatabase(String enteredEmail, String password) {
-    Log.d("checkRealtimeDatabase", "checkRealtimeDatabase started");
+    private void checkRealtimeDatabase(String parentDpName, String enteredEmail, String password) {
     String sanitizedEmail = enteredEmail.trim().replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
-    Log.d("checkRealtimeDatabase", "Sanitized Email: " + sanitizedEmail);
-    Log.d("checkRealtimeDatabase", "password: " + password);
-    Log.d("checkRealtimeDatabase", "enteredEmail: " + enteredEmail);
+    databaseReference = FirebaseDatabase.getInstance().getReference(parentDpName);
 
-
-    String userDb = "Users";
-    databaseReference.child(userDb).child(sanitizedEmail)
+    databaseReference.child(parentDpName).child(sanitizedEmail)
              .addListenerForSingleValueEvent(new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot snapshot) {
-            Log.d("checkRealtimeDatabase", "db data change");
             dismissLoadingDialog();
-            Log.d("checkRealtimeDatabase", "snapshot: " + snapshot);
             if (snapshot.exists()) {
-                Log.d("checkRealtimeDatabase", "User exists in the database");
                 // User found in the Realtime Database
-                Users usersData = snapshot.getValue(Users.class);
-                Log.d("checkRealtimeDatabase", "User data: " + usersData);
-
+                Users usersData = snapshot.child(parentDpName).child(sanitizedEmail).getValue(Users.class);
                 if (usersData != null) {
-                    Log.d("checkRealtimeDatabase", "Entered Password: " + password);
-                    Log.d("checkRealtimeDatabase", "Database Password: " + usersData.getPassword());
-
                     if (TextUtils.equals(usersData.getPassword(), password)) {
-
-                        // Password matches, start Home Activity
-                        Intent intent = new Intent(getActivity(), Home.class);
-                        intent.putExtra("userEmail", usersData.getEmail().toLowerCase());
-                        startActivity(intent);
+                       if (parentDpName.equals("Admins")){
+                           // User is an admin
+                           checkAdminCredentials(sanitizedEmail, password);
+                       } else {
+                           // User is a regular user
+                           startHomeActivity(usersData.getEmail().toLowerCase());
+                       }
                     }  else {
                         errorAnimationShake();
                         passwordTIL.setError(getString(R.string.error_msg_invalid_password_matching));
@@ -354,15 +366,55 @@ private void checkRealtimeDatabase(String enteredEmail, String password) {
             // Handle database error here if needed
             Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
         }
-
-        private void handleUserNotFound() {
-            dismissLoadingDialog();
-            errorAnimationShake();
-            Log.d("checkRealtimeDatabase", "User not found in the database");
-            userDoesntExistsDialog();
-        }
     });
 }
+    private void handleUserNotFound() {
+        dismissLoadingDialog();
+        errorAnimationShake();
+        Log.d("checkRealtimeDatabase", "User not found in the database");
+        userDoesntExistsDialog();
+    }
+    private void checkAdminCredentials(String sanitizedEmail, String password) {
+            databaseReference.child("Admins").child(sanitizedEmail)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()) {
+                                Admins adminData = snapshot.getValue(Admins.class);
+                                if (adminData != null && TextUtils.equals(adminData.getPassword(), password)) {
+                                    // Admin credentials match, start AdminAddNewProductActivity
+                                    startAdminActivity(adminData.getEmail().toLowerCase());
+                                } else {
+                                    errorAnimationShake();
+                                    passwordTIL.setError(getString(R.string.error_msg_invalid_password_matching));
+                                }
+                            } else {
+                                handleUserNotFound();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            dismissLoadingDialog();
+                            Toast.makeText(getContext(), R.string.database_error_or_network_error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+    }
+
+    private void startHomeActivity(String userEmail) {
+        dismissLoadingDialog();
+        Intent intent = new Intent(getActivity(), Home.class);
+        intent.putExtra("userEmail", userEmail);
+        startActivity(intent);
+    }
+
+    private void startAdminActivity(String userEmail) {
+        dismissLoadingDialog();
+        Intent intent = new Intent(getActivity(), AdminAddNewProductActivity.class);
+        intent.putExtra("userEmail", userEmail);
+        startActivity(intent);
+    }
+
     private void showRegistration(){
         createAccTV.setTextColor(requireActivity().getColor(R.color.dark_dirty_violet));
         createAccTV.setTypeface(Typeface.DEFAULT_BOLD);
@@ -375,6 +427,7 @@ private void checkRealtimeDatabase(String enteredEmail, String password) {
             transaction.commit();
         },500);
     }
+
     @SuppressLint("SetTextI18n")
     private void userDoesntExistsDialog() {
         errorAnimationShake();
@@ -451,7 +504,7 @@ private void checkRealtimeDatabase(String enteredEmail, String password) {
 
                             String userEmail = user.getEmail();
 
-                            loadingDialog();
+//                            loadingDialog();
                            new Handler().postDelayed(() -> {
                                dismissLoadingDialog();
                                Intent intent = new Intent(getActivity(), Home.class);
@@ -471,6 +524,5 @@ private void checkRealtimeDatabase(String enteredEmail, String password) {
                     });
                 }
     });
-
 
 }

@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         if (userEmailKey != null && userPasswordKey != null){
             if (!TextUtils.isEmpty(userEmailKey) && !TextUtils.isEmpty(userPasswordKey)){
                 allowAccess(userEmailKey, userPasswordKey);
-                loadingDialog();
+//                loadingDialog();
             }
         }
 

@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +39,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.student.digimart.Models.Users;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -302,7 +304,7 @@ public class SignupFragment extends Fragment {
                                     if (emailSnapshot.exists()) {
                                         userAlreadyExistsDialog();
                                     } else {
-                                        createFirebaseUser(usernameVA, emailVA, phoneNumberVA, cPasswordVA);
+                                        createFirebaseUser(emailVA, cPasswordVA, phoneNumberVA, usernameVA);
                                     }
                                 }
 
@@ -328,11 +330,17 @@ public class SignupFragment extends Fragment {
 
     }
 
-    private void createFirebaseUser(String usernameVA, String emailVA, String phoneNumberVA, String cPasswordVA) {
+
+    private void createFirebaseUser(String emailVA, String cPasswordVA, String phoneNumberVA, String usernameVA) {
         String sanitizedEmail = emailVA.replace('.', '_').replace('#', '_').replace('$', '_').replace('[', '_').replace(']', '_');
+
+        Log.d("AccountCreation", "Creating Firebase user with email: " + emailVA);
+
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(emailVA, cPasswordVA)
                 .addOnCompleteListener(requireActivity(), task -> {
                     if (task.isSuccessful()) {
+                        Log.d("AccountCreation", "Firebase user created successfully");
+
                         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
                         if (firebaseUser != null) {
                             sendVerificationEmail(firebaseUser, emailVA);
@@ -341,18 +349,28 @@ public class SignupFragment extends Fragment {
                             final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
                             DatabaseReference userRef = databaseReference.child("Users").child(sanitizedEmail);
                             Users user = new Users(sanitizedEmail, cPasswordVA, phoneNumberVA, usernameVA);
+
+                            Log.d("AccountCreation", "Saving user details to the database");
+
                             userRef.setValue(user).addOnCompleteListener(newUserTask -> {
                                 dismissLoadingDialog();
                                 if (task.isSuccessful()) {
+
+                                    Log.d("AccountCreation", "User details saved successfully");
+
                                     // Successfully saved user details in the Realtime Database
                                     Toast.makeText(requireContext(), "Registration successful", Toast.LENGTH_SHORT).show();
                                 } else {
+                                    Log.e("AccountCreation", "Failed to save user details: " + task.getException().getMessage());
+
                                     // Handle database saving failure
                                     Toast.makeText(requireContext(), "Database saving failed: " + task.getException(), Toast.LENGTH_SHORT).show();
                                 }
                             });
                         }
                     } else {
+                        Log.e("AccountCreation", "Failed to create Firebase user: " + task.getException().getMessage());
+
                         dismissLoadingDialog();
                         Toast.makeText(getContext(), "Failed to create account: " + Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
                     }

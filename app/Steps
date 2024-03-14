@@ -21,7 +21,7 @@ Create activity and Design xml for with *signup and signing fragments*
                     >in this method I have used   // Sanitize the email to create a valid database key
                         here OR WE CAN Also USE UID // i think this is much better to user for future data storage.
 
-????? email confirmation ?????????????
+
 <<<<<<<<<<<<<<<<<<<<<<< HERE SIGNUP IS FINISHED <<<<<<<<<<<<<<<<<<<<<<<
  // DATE: 13 SEPTEMBER 2023
 
