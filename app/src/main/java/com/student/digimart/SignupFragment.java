@@ -27,6 +27,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -37,6 +39,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.student.digimart.Models.Users;
+
+import java.lang.annotation.Target;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.UUID;
@@ -74,6 +78,18 @@ public class SignupFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_signup, container, false);
+
+        Log.d("AppTesting", "Signup Fragment onCreateView");
+        // Load the image using Glide
+        ImageView digimartImageView = view.findViewById(R.id.digimart_name);
+        // Calculate the desired height based on the aspect ratio
+        int desiredWidth = digimartImageView.getMaxWidth();
+        int desiredHeight = digimartImageView.getHeight(); // Use the height of the ImageView
+
+        Glide.with(this).load(R.drawable.name_digimart_screen_top)
+                .override(desiredWidth, desiredHeight)
+                .into(digimartImageView);
+
 
         haveAcc = view.findViewById(R.id.have_acc_tv);
         haveAcc.setOnClickListener(v -> showSignIn());
